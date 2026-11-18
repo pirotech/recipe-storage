@@ -1,11 +1,35 @@
 services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: recipes
+      POSTGRES_PASSWORD: recipes
+      POSTGRES_DB: recipes
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U recipes -d recipes"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
   api:
     build:
       context: ./apps/api
     env_file: ./apps/api/.env
+    environment:
+      DATABASE_URL: postgresql://recipes:recipes@db:5432/recipes
+    depends_on:
+      db:
+        condition: service_healthy
     ports:
       - "8000:8000"
-    # dev-режим: автоперезагрузка при изменении кода
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     volumes:
       - ./apps/api/app:/app/app
+      - ./apps/api/alembic:/app/alembic
+
+volumes:
+  pgdata:

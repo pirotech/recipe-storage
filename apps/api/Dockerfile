@@ -15,6 +15,8 @@ COPY pyproject.toml uv.lock* ./
 RUN uv sync --no-dev --no-install-project
 
 # Потом код
+COPY alembic.ini ./
+COPY alembic ./alembic
 COPY app ./app
 
 # Запуск не от root
