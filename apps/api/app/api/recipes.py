@@ -1,55 +1,59 @@
-from datetime import UTC, datetime
-from uuid import UUID, uuid4
+from uuid import UUID
 
-from fastapi import APIRouter, status
+from fastapi import APIRouter, HTTPException, status
+from sqlalchemy import select
 
+from app.api.deps import DbSession
+from app.db.models import Recipe
 from app.schemas.recipe import RecipeCreate, RecipeRead, RecipeUpdate
 
 router = APIRouter(tags=["recipes"])
 
 
-def _stub_recipe(id: UUID | None = None, source_url: str = "https://example.com/pancakes") -> RecipeRead:
-    return RecipeRead(
-        id=id or uuid4(),
-        source_url=source_url,
-        title="Блины (заглушка)",
-        image_url=None,
-        servings="4 порции",
-        total_time_minutes=30,
-        ingredients=[
-            {"raw": "2 стакана молока", "name": "молоко", "amount": 2, "unit": "стакан"},
-            {"raw": "1 стакан муки", "name": "мука", "amount": 1, "unit": "стакан"},
-            {"raw": "2 яйца", "name": "яйцо", "amount": 2, "unit": None},
-        ],
-        steps=[
-            {"text": "Смешать все ингредиенты до однородного теста."},
-            {"text": "Жарить на разогретой сковороде с двух сторон."},
-        ],
-        created_at=datetime.now(UTC),
-    )
+def _get_or_404(db: DbSession, recipe_id: UUID) -> Recipe:
+    recipe = db.get(Recipe, recipe_id)
+    if recipe is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Recipe not found")
+    return recipe
 
 
 @router.post("", response_model=RecipeRead, status_code=status.HTTP_201_CREATED)
-def create_recipe(payload: RecipeCreate) -> RecipeRead:
-    return _stub_recipe(source_url=str(payload.url))
+def create_recipe(payload: RecipeCreate, db: DbSession) -> Recipe:
+    # TODO (шаг 5): здесь будет вызов парсера. Пока сохраняем «болванку».
+    recipe = Recipe(
+        source_url=str(payload.url),
+        title=payload.url.host or str(payload.url),
+        ingredients=[],
+        steps=[],
+    )
+    db.add(recipe)
+    db.commit()
+    db.refresh(recipe)
+    return recipe
 
 
 @router.get("", response_model=list[RecipeRead])
-def list_recipes() -> list[RecipeRead]:
-    return [_stub_recipe()]
+def list_recipes(db: DbSession) -> list[Recipe]:
+    stmt = select(Recipe).order_by(Recipe.created_at.desc())
+    return list(db.scalars(stmt))
 
 
 @router.get("/{recipe_id}", response_model=RecipeRead)
-def get_recipe(recipe_id: UUID) -> RecipeRead:
-    return _stub_recipe(id=recipe_id)
+def get_recipe(recipe_id: UUID, db: DbSession) -> Recipe:
+    return _get_or_404(db, recipe_id)
 
 
 @router.patch("/{recipe_id}", response_model=RecipeRead)
-def update_recipe(recipe_id: UUID, payload: RecipeUpdate) -> RecipeRead:
-    recipe = _stub_recipe(id=recipe_id)
-    return recipe.model_copy(update=payload.model_dump(exclude_unset=True))
+def update_recipe(recipe_id: UUID, payload: RecipeUpdate, db: DbSession) -> Recipe:
+    recipe = _get_or_404(db, recipe_id)
+    for field, value in payload.model_dump(exclude_unset=True).items():
+        setattr(recipe, field, value)
+    db.commit()
+    return recipe
 
 
 @router.delete("/{recipe_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_recipe(recipe_id: UUID) -> None:
-    return None
+def delete_recipe(recipe_id: UUID, db: DbSession) -> None:
+    recipe = _get_or_404(db, recipe_id)
+    db.delete(recipe)
+    db.commit()

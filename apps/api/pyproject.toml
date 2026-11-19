@@ -9,6 +9,8 @@ dependencies = [
     "sqlalchemy>=2.1.9",
     "psycopg[binary]>=3.3.9",
     "alembic>=1.20.1",
+    "recipe-scrapers>=15",
+    "httpx>=0.28.1",
 ]
 
 [dependency-groups]

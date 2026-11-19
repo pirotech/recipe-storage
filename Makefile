@@ -1,9 +1,11 @@
 .PHONY: dev up down logs test lint
 
-dev:        ## запустить бэкенд в docker (с автоперезагрузкой)
+## запустить бэкенд в docker (с автоперезагрузкой)
+dev:
 	docker compose up --build
 
-up:         ## запустить в фоне
+## запустить в фоне
+up:
 	docker compose up --build -d
 
 down:
@@ -12,7 +14,9 @@ down:
 logs:
 	docker compose logs -f api
 
-test:       ## тесты (локально, нужен uv)
+## тесты (нужен uv и Postgres из compose)
+test:
+	docker compose up -d --wait db
 	cd apps/api && uv run pytest
 
 lint:

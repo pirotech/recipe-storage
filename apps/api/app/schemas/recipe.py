@@ -1,7 +1,7 @@
 from datetime import datetime
 from uuid import UUID
 
-from pydantic import BaseModel, Field, HttpUrl
+from pydantic import BaseModel, ConfigDict, Field, HttpUrl, field_validator
 
 
 class Ingredient(BaseModel):
@@ -28,8 +28,16 @@ class RecipeUpdate(BaseModel):
     ingredients: list[Ingredient] | None = None
     steps: list[Step] | None = None
 
+    @field_validator("title", "ingredients", "steps")
+    @classmethod
+    def not_null(cls, v):
+        if v is None:
+            raise ValueError("Поле нельзя обнулить")
+        return v
+
 
 class RecipeRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
     id: UUID
     source_url: str
     title: str
