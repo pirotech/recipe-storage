@@ -9,6 +9,13 @@ from app.db import models  # noqa: F401  (регистрирует модели 
 from app.db.base import Base
 from app.db.session import get_db
 from app.main import app
+from tests.samples import SAMPLE_RECIPE_HTML
+
+
+@pytest.fixture(autouse=True)
+def no_network(monkeypatch):
+    """Ни один тест не должен реально качать страницы."""
+    monkeypatch.setattr("app.api.recipes.fetch_html", lambda url: SAMPLE_RECIPE_HTML)
 
 
 def _test_db_url():

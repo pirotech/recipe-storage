@@ -13,6 +13,7 @@ class Recipe(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     source_url: Mapped[str] = mapped_column(Text)
+    url_key: Mapped[str | None] = mapped_column(Text, index=True)
     title: Mapped[str] = mapped_column(Text)
     image_url: Mapped[str | None] = mapped_column(Text)
     servings: Mapped[str | None] = mapped_column(String(100))
