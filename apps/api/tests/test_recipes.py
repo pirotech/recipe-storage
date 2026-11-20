@@ -108,3 +108,30 @@ def test_fetch_timeout_maps_to_504(client, monkeypatch):
     monkeypatch.setattr("app.api.recipes.fetch_html", boom)
     r = client.post("/api/recipes", json={"url": "https://example.com/slow"})
     assert r.status_code == 504
+
+
+def test_recipes_require_auth(anon_client):
+    assert anon_client.get("/api/recipes").status_code == 401
+    r = anon_client.post("/api/recipes", json={"url": "https://example.com/pancakes"})
+    assert r.status_code == 401
+
+
+def test_recipes_are_private(client, other_client):
+    rid = client.post("/api/recipes", json={"url": "https://example.com/pancakes"}).json()["id"]
+
+    assert other_client.get("/api/recipes").json() == []
+    assert other_client.get(f"/api/recipes/{rid}").status_code == 404
+    assert other_client.patch(f"/api/recipes/{rid}", json={"title": "hack"}).status_code == 404
+    assert other_client.delete(f"/api/recipes/{rid}").status_code == 404
+    # у владельца всё на месте и не изменилось
+    mine = client.get(f"/api/recipes/{rid}")
+    assert mine.status_code == 200
+    assert mine.json()["title"] == "Блины на молоке"
+
+
+def test_same_url_for_different_users(client, other_client):
+    url = {"url": "https://example.com/pancakes"}
+    a = client.post("/api/recipes", json=url)
+    b = other_client.post("/api/recipes", json=url)
+    assert a.status_code == b.status_code == 201
+    assert a.json()["id"] != b.json()["id"]
