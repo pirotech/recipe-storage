@@ -1,4 +1,6 @@
+import { AddRecipeForm } from '@/features/addRecipe'
 import { UserMenu } from '@/features/auth'
+import { RecipeList } from '@/widgets/recipeList'
 
 export function HomePage() {
   return (
@@ -7,7 +9,10 @@ export function HomePage() {
         <h1 className="text-lg font-semibold">Рецепты</h1>
         <UserMenu />
       </header>
-      <main className="p-4 text-muted-foreground">Здесь появятся ваши рецепты.</main>
+      <main className="mx-auto max-w-5xl space-y-6 p-4">
+        <AddRecipeForm />
+        <RecipeList />
+      </main>
     </div>
   )
 }

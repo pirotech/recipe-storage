@@ -69,10 +69,10 @@ async function toApiError(res: Response): Promise<ApiError> {
   return new ApiError(res.status, message, code);
 }
 
-export async function api<T>(
+export async function apiRequest<T>(
   path: string,
   options: RequestOptions = {},
-): Promise<T> {
+): Promise<{ data: T; status: number }> {
   const useAuth = options.auth ?? true;
 
   let res = await send(
@@ -88,6 +88,14 @@ export async function api<T>(
   }
 
   if (!res.ok) throw await toApiError(res);
-  if (res.status === 204) return undefined as T;
-  return (await res.json()) as T;
+  const data =
+    res.status === 204 ? (undefined as T) : ((await res.json()) as T);
+  return { data, status: res.status };
+}
+
+export async function api<T>(
+  path: string,
+  options: RequestOptions = {},
+): Promise<T> {
+  return (await apiRequest<T>(path, options)).data;
 }

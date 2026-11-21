@@ -1,2 +1,2 @@
-export { api, ApiError, setAuthAdapter } from "./client";
+export { api, apiRequest, ApiError, setAuthAdapter } from "./client";
 export { queryClient } from "./queryClient";
