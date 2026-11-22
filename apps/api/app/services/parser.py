@@ -57,6 +57,7 @@ def parse_recipe(html: str, url: str) -> ParsedRecipe:
         raise ParseError("На странице не найден рецепт")
 
     steps_text = _optional(scraper.instructions_list) or []
+    logger.info("Instructions list: %r", steps_text)
     if not steps_text:  # запасной путь: один текст → разбиваем по строкам
         text = _optional(scraper.instructions) or ""
         logger.info("Instructions list not avilable, try to parse text")
