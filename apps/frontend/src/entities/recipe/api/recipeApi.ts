@@ -1,4 +1,4 @@
-import { api, apiRequest } from "@/shared/api";
+import { api, apiRequest, ApiError } from "@/shared/api";
 
 type IngredientDto = {
   raw: string;
@@ -58,4 +58,18 @@ export async function createRecipe(
   });
   // 201 — новый рецепт, 200 — такая ссылка уже была в коллекции
   return { recipe: toRecipe(data), created: status === 201 };
+}
+
+export async function fetchRecipe(id: string): Promise<Recipe> {
+  return toRecipe(await api<RecipeDto>(`/recipes/${encodeURIComponent(id)}`));
+}
+
+export async function deleteRecipe(id: string): Promise<void> {
+  try {
+    await api<void>(`/recipes/${encodeURIComponent(id)}`, { method: "DELETE" });
+  } catch (e) {
+    // DELETE идемпотентен: если рецепта уже нет (удалили в другой вкладке), цель достигнута
+    if (e instanceof ApiError && e.status === 404) return;
+    throw e;
+  }
 }
