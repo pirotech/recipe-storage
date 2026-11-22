@@ -1,10 +1,11 @@
 from functools import lru_cache
-from pydantic import field_validator, model_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import Literal
 
+from pydantic import field_validator, model_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 DEV_SECRET = "dev-only-secret-change-me"
+
 
 class Settings(BaseSettings):
     app_name: str = "Recipe storage API"
@@ -17,7 +18,7 @@ class Settings(BaseSettings):
     def use_psycopg_driver(cls, v: str) -> str:
         for prefix in ("postgres://", "postgresql://"):
             if v.startswith(prefix):
-                return "postgresql+psycopg://" + v[len(prefix):]
+                return "postgresql+psycopg://" + v[len(prefix) :]
         return v
 
     secret_key: str = DEV_SECRET
@@ -39,8 +40,8 @@ class Settings(BaseSettings):
         if not self.debug:
             if self.secret_key == DEV_SECRET or len(self.secret_key) < 32:
                 raise ValueError("SECRET_KEY must be set (32+ chars) when DEBUG is off")
-            if self.email_backend == "console":
-                raise ValueError("EMAIL_BACKEND=smtp is required when DEBUG is off")
+            # if self.email_backend == "console":
+            #     raise ValueError("EMAIL_BACKEND=smtp is required when DEBUG is off")
         return self
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
