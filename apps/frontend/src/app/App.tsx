@@ -1,7 +1,7 @@
-import { QueryClientProvider } from '@tanstack/react-query'
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
-import { queryClient } from '@/shared/api'
-import { AppRouter } from './router'
+import { QueryClientProvider } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { queryClient } from "@/shared/api";
+import { AppRouter } from "./router";
 
 export default function App() {
   return (
@@ -9,5 +9,5 @@ export default function App() {
       <AppRouter />
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
-  )
+  );
 }

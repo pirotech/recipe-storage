@@ -73,3 +73,30 @@ export async function deleteRecipe(id: string): Promise<void> {
     throw e;
   }
 }
+
+export type RecipeUpdate = {
+  title: string;
+  imageUrl: string | null;
+  servings: string | null;
+  totalTimeMinutes: number | null;
+  ingredients: Ingredient[];
+  steps: Step[];
+};
+
+export async function updateRecipe(
+  id: string,
+  update: RecipeUpdate,
+): Promise<Recipe> {
+  const dto = await api<RecipeDto>(`/recipes/${encodeURIComponent(id)}`, {
+    method: "PATCH",
+    body: {
+      title: update.title,
+      image_url: update.imageUrl,
+      servings: update.servings,
+      total_time_minutes: update.totalTimeMinutes,
+      ingredients: update.ingredients,
+      steps: update.steps.map((s) => ({ text: s.text, image_url: s.imageUrl })),
+    },
+  });
+  return toRecipe(dto);
+}
