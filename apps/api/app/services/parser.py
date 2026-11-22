@@ -59,6 +59,7 @@ def parse_recipe(html: str, url: str) -> ParsedRecipe:
     steps_text = _optional(scraper.instructions_list) or []
     if not steps_text:  # запасной путь: один текст → разбиваем по строкам
         text = _optional(scraper.instructions) or ""
+        logger.info("Instructions list not avilable, try to parse text")
         steps_text = text.splitlines()
     steps = [Step(text=s.strip()) for s in steps_text if isinstance(s, str) and s.strip()]
 
