@@ -39,7 +39,7 @@ services:
     depends_on:
       - api
     ports:
-      - "5173:8080"
+      - "5173:8000"
 
 volumes:
   pgdata:
