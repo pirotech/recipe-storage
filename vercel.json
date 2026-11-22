@@ -2,13 +2,13 @@
   "services": {
     "frontend": {
       "root": "apps/frontend/",
-      "framework": "vite",
-      "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+      "runtime": "container",
+      "entrypoint": "Dockerfile"
     },
     "api": {
       "root": "apps/api/",
-      "framework": "fastapi",
-      "entrypoint": "app.main:app"
+      "runtime": "container",
+      "entrypoint": "Dockerfile"
     }
   },
   "rewrites": [
