@@ -5,10 +5,8 @@ from pydantic import BaseModel, ConfigDict, Field, HttpUrl, field_validator
 
 
 class Ingredient(BaseModel):
+    # Единственное поле: количество, единицы и название разбирает фронт
     raw: str = Field(description="Исходная строка, например «2 ст. л. муки»")
-    name: str | None = None
-    amount: float | None = None
-    unit: str | None = None
 
 
 class Step(BaseModel):

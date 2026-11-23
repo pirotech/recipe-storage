@@ -1,13 +1,33 @@
+import { useMemo, type ReactNode } from 'react'
 import { RemoteImage } from '@/shared/ui/remote-image'
 import type { Recipe } from '../api/recipeApi'
 import { formatDate } from '../lib/formatDate'
 import { formatMinutes } from '../lib/formatMinutes'
 import { hostname } from '../lib/hostname'
+import {
+  parseIngredient,
+  scaleIngredient,
+  scaleServings,
+} from '../lib/scaling'
 
-export function RecipeDetails({ recipe }: { recipe: Recipe }) {
+type Props = {
+  recipe: Recipe
+  /** Во сколько раз изменить количества: ингредиенты и порции. 1 — как в оригинале. */
+  scale?: number
+  /** Выбор количества. Его место здесь, а сам контрол приходит снаружи (слой features). */
+  scaleControl?: ReactNode
+}
+
+export function RecipeDetails({ recipe, scale = 1, scaleControl }: Props) {
+  // Разбор строк зависит только от рецепта, поэтому при смене множителя не повторяется
+  const parsedIngredients = useMemo(
+    () => recipe.ingredients.map((i) => parseIngredient(i.raw)),
+    [recipe.ingredients],
+  )
+
   const meta = [
     recipe.totalTimeMinutes != null && formatMinutes(recipe.totalTimeMinutes),
-    recipe.servings,
+    recipe.servings && scaleServings(recipe.servings, scale),
     `Добавлен ${formatDate(recipe.createdAt)}`,
   ].filter(Boolean)
 
@@ -33,11 +53,12 @@ export function RecipeDetails({ recipe }: { recipe: Recipe }) {
 
       <section>
         <h2 className="mb-3 text-lg font-semibold">Ингредиенты</h2>
+        {scaleControl && <div className="mb-4">{scaleControl}</div>}
         {recipe.ingredients.length > 0 ? (
           <ul className="list-disc space-y-1 pl-5">
             {/* Индекс как key допустим: список не переставляется и не редактируется на лету */}
-            {recipe.ingredients.map((ingredient, i) => (
-              <li key={i}>{ingredient.raw}</li>
+            {parsedIngredients.map((ingredient, i) => (
+              <li key={i}>{scaleIngredient(ingredient, scale)}</li>
             ))}
           </ul>
         ) : (

@@ -44,7 +44,7 @@ def test_update(client):
         f"/api/recipes/{rid}",
         json={
             "title": "Борщ",
-            "ingredients": [{"raw": "2 свеклы", "name": "свёкла", "amount": 2}],
+            "ingredients": [{"raw": "2 свеклы"}],
         },
     )
     assert r.status_code == 200
@@ -52,6 +52,18 @@ def test_update(client):
     # изменения реально сохранились в БД
     saved = client.get(f"/api/recipes/{rid}").json()
     assert saved["ingredients"][0]["raw"] == "2 свеклы"
+
+
+def test_update_ignores_legacy_ingredient_fields(client):
+    # Старые клиенты ещё присылают name/amount/unit: они не должны попасть в БД.
+    rid = _create(client)["id"]
+    r = client.patch(
+        f"/api/recipes/{rid}",
+        json={"ingredients": [{"raw": "2 свеклы", "name": "свёкла", "amount": 2, "unit": None}]},
+    )
+    assert r.status_code == 200
+    assert r.json()["ingredients"] == [{"raw": "2 свеклы"}]
+    assert client.get(f"/api/recipes/{rid}").json()["ingredients"] == [{"raw": "2 свеклы"}]
 
 
 def test_update_title_null_rejected(client):

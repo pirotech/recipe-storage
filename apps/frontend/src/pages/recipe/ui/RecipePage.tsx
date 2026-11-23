@@ -1,6 +1,13 @@
+import { useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
-import { RecipeDetails, useRecipe } from "@/entities/recipe";
+import {
+  RecipeDetails,
+  canScaleRecipe,
+  useRecipe,
+  type Recipe,
+} from "@/entities/recipe";
 import { DeleteRecipeButton } from "@/features/deleteRecipe";
+import { ScaleControl } from "@/features/scaleRecipe";
 import { ApiError } from "@/shared/api";
 import { Alert, AlertDescription } from "@/shared/ui/alert";
 import { Skeleton } from "@/shared/ui/skeleton";
@@ -15,9 +22,45 @@ const backLink = (
   </Link>
 );
 
+function RecipeView({ recipe }: { recipe: Recipe }) {
+  const navigate = useNavigate();
+  const [scale, setScale] = useState(1);
+  // Выбор количества показываем, только если все строки с числами удалось разобрать
+  const scalable = useMemo(() => canScaleRecipe(recipe), [recipe]);
+
+  return (
+    <article className="mx-auto max-w-3xl space-y-6">
+      <div className="flex items-center justify-between">
+        {backLink}
+        <Link
+          to={`/recipes/${recipe.id}/edit`}
+          className={buttonVariants({ variant: "outline", size: "sm" })}
+        >
+          Редактировать
+        </Link>
+      </div>
+      <RecipeDetails
+        recipe={recipe}
+        // Если после правки рецепт перестал пересчитываться, возвращаем исходные количества
+        scale={scalable ? scale : 1}
+        scaleControl={
+          scalable ? <ScaleControl value={scale} onChange={setScale} /> : null
+        }
+      />
+      <div className="border-t pt-6">
+        <DeleteRecipeButton
+          recipeId={recipe.id}
+          recipeTitle={recipe.title}
+          // replace: удалённая страница уходит из истории, и кнопка «назад» не вернёт на неё
+          onDeleted={() => navigate("/", { replace: true })}
+        />
+      </div>
+    </article>
+  );
+}
+
 export function RecipePage() {
   const { id = "" } = useParams();
-  const navigate = useNavigate();
   const { data: recipe, isPending, error } = useRecipe(id);
 
   // 404 — нет такого рецепта, 422 — в адресе не UUID (например, /recipes/123)
@@ -38,28 +81,8 @@ export function RecipePage() {
   // Сначала проверяем data, а не error: если рецепт взят из кэша, а фоновое обновление
   // упало (например, пропала сеть), пользователь всё равно должен видеть рецепт
   if (recipe) {
-    return (
-      <article className="mx-auto max-w-3xl space-y-6">
-        <div className="flex items-center justify-between">
-          {backLink}
-          <Link
-            to={`/recipes/${recipe.id}/edit`}
-            className={buttonVariants({ variant: "outline", size: "sm" })}
-          >
-            Редактировать
-          </Link>
-        </div>
-        <RecipeDetails recipe={recipe} />
-        <div className="border-t pt-6">
-          <DeleteRecipeButton
-            recipeId={recipe.id}
-            recipeTitle={recipe.title}
-            // replace: удалённая страница уходит из истории, и кнопка «назад» не вернёт на неё
-            onDeleted={() => navigate("/", { replace: true })}
-          />
-        </div>
-      </article>
-    );
+    // key: при переходе на другой рецепт выбранный множитель не переносится
+    return <RecipeView key={recipe.id} recipe={recipe} />;
   }
 
   if (isPending) {

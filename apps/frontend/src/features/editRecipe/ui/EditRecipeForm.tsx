@@ -38,7 +38,7 @@ export function EditRecipeForm({ recipe, onSaved, onCancel }: Props) {
   const { mutate, isPending, error } = useUpdateRecipe(recipe.id);
 
   const onSubmit = handleSubmit((values) => {
-    mutate(toRecipeUpdate(values, recipe), { onSuccess: onSaved });
+    mutate(toRecipeUpdate(values), { onSuccess: onSaved });
   });
 
   const errorMessage =
