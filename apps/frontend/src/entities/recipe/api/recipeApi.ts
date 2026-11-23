@@ -1,11 +1,6 @@
 import { api, apiRequest, ApiError } from "@/shared/api";
 
-type IngredientDto = {
-  raw: string;
-  name: string | null;
-  amount: number | null;
-  unit: string | null;
-};
+type IngredientDto = { raw: string };
 type StepDto = { text: string; image_url: string | null };
 type RecipeDto = {
   id: string;

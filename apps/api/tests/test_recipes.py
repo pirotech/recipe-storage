@@ -1,8 +1,10 @@
 from uuid import uuid4
+
 import pytest
 
 from app.services.errors import FetchError
 from tests.samples import NO_RECIPE_HTML
+
 
 def _create(client, url="https://example.com/borscht"):
     r = client.post("/api/recipes", json={"url": url})
@@ -44,7 +46,7 @@ def test_update(client):
         f"/api/recipes/{rid}",
         json={
             "title": "Борщ",
-            "ingredients": [{"raw": "2 свеклы", "name": "свёкла", "amount": 2}],
+            "ingredients": [{"raw": "2 свеклы"}],
         },
     )
     assert r.status_code == 200
@@ -73,6 +75,7 @@ def test_delete(client):
 
 def test_delete_not_found(client):
     assert client.delete(f"/api/recipes/{uuid4()}").status_code == 404
+
 
 def test_create_saves_parsed_data(client):
     r = client.post("/api/recipes", json={"url": "https://example.com/pancakes"})

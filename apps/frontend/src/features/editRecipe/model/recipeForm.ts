@@ -50,30 +50,14 @@ export function toFormValues(recipe: Recipe): RecipeFormValues {
   };
 }
 
-export function toRecipeUpdate(
-  values: RecipeFormValues,
-  original: Recipe,
-): RecipeUpdate {
-  // У ингредиента кроме строки raw есть разобранные name/amount/unit. Править их руками мы не
-  // даём, но терять не хотим. Если строка не менялась, возвращаем исходный разбор. Если её
-  // изменили, разбор устарел («2 свеклы» → «3 свеклы», а amount всё ещё 2), и честнее его
-  // обнулить, чем хранить неверные данные.
-  const parsedByRaw = new Map(
-    original.ingredients.map((i) => [i.raw.trim(), i]),
-  );
-
+export function toRecipeUpdate(values: RecipeFormValues): RecipeUpdate {
   return {
     title: values.title,
     imageUrl: values.imageUrl || null,
     servings: values.servings || null,
     totalTimeMinutes:
       values.totalTimeMinutes === "" ? null : Number(values.totalTimeMinutes),
-    ingredients: values.ingredients.map(({ raw }) => {
-      const parsed = parsedByRaw.get(raw);
-      return parsed
-        ? { ...parsed, raw }
-        : { raw, name: null, amount: null, unit: null };
-    }),
+    ingredients: values.ingredients.map(({ raw }) => ({ raw })),
     steps: values.steps.map((s) => ({
       text: s.text,
       imageUrl: s.imageUrl || null,
