@@ -40,22 +40,31 @@ def _http_url(value) -> str | None:
     return None
 
 
-def get_steps(scraper) -> list[str]:
-    raw = scraper.schema.data.get("recipeInstructions") or []
+def get_steps(scraper, url: str) -> list[Step]:
     steps = []
-    for item in raw:
-        if isinstance(item, str):
-            steps.append(html.unescape(item).strip())
-        elif item.get("@type") == "HowToStep":
-            name = html.unescape(item.get("name") or "").strip()
-            text = html.unescape(item.get("text") or "").strip()
-            steps.append(f"{name}: {text}" if name and name != text else text)
-        elif item.get("@type") == "HowToSection":
-            for sub in item.get("itemListElement", []):
-                name = html.unescape(sub.get("name") or "").strip()
-                text = html.unescape(sub.get("text") or "").strip()
+    if "pinchofyum.com" in url:
+        raw = scraper.schema.data.get("recipeInstructions") or []
+        for item in raw:
+            if isinstance(item, str):
+                steps.append(html.unescape(item).strip())
+            elif item.get("@type") == "HowToStep":
+                name = html.unescape(item.get("name") or "").strip()
+                text = html.unescape(item.get("text") or "").strip()
                 steps.append(f"{name}: {text}" if name and name != text else text)
-    return steps
+            elif item.get("@type") == "HowToSection":
+                for sub in item.get("itemListElement", []):
+                    name = html.unescape(sub.get("name") or "").strip()
+                    text = html.unescape(sub.get("text") or "").strip()
+                    steps.append(f"{name}: {text}" if name and name != text else text)
+        logger.info("From handle parse: %r", steps)
+    else:
+        steps = _optional(scraper.instructions_list) or []
+        logger.info("From instructions_list(): %r", steps)
+        if not steps:
+            text = _optional(scraper.instructions) or ""
+            steps = text.splitlines()
+            logger.info("From instructions(): %r", steps)
+    return [Step(text=s.strip()) for s in steps if isinstance(s, str) and s.strip()]
 
 
 def parse_recipe(html: str, url: str) -> ParsedRecipe:
@@ -75,9 +84,7 @@ def parse_recipe(html: str, url: str) -> ParsedRecipe:
     if not title or not ingredients:
         raise ParseError("На странице не найден рецепт")
 
-    steps_text = get_steps(scraper)
-    logger.info("Instructions list: %r", steps_text)
-    steps = [Step(text=s.strip()) for s in steps_text if isinstance(s, str) and s.strip()]
+    steps = get_steps(scraper, url)
 
     servings = _optional(scraper.yields)
     total_time = _optional(scraper.total_time)
