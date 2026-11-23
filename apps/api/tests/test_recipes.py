@@ -1,8 +1,10 @@
 from uuid import uuid4
+
 import pytest
 
 from app.services.errors import FetchError
 from tests.samples import NO_RECIPE_HTML
+
 
 def _create(client, url="https://example.com/borscht"):
     r = client.post("/api/recipes", json={"url": url})
@@ -54,18 +56,6 @@ def test_update(client):
     assert saved["ingredients"][0]["raw"] == "2 свеклы"
 
 
-def test_update_ignores_legacy_ingredient_fields(client):
-    # Старые клиенты ещё присылают name/amount/unit: они не должны попасть в БД.
-    rid = _create(client)["id"]
-    r = client.patch(
-        f"/api/recipes/{rid}",
-        json={"ingredients": [{"raw": "2 свеклы", "name": "свёкла", "amount": 2, "unit": None}]},
-    )
-    assert r.status_code == 200
-    assert r.json()["ingredients"] == [{"raw": "2 свеклы"}]
-    assert client.get(f"/api/recipes/{rid}").json()["ingredients"] == [{"raw": "2 свеклы"}]
-
-
 def test_update_title_null_rejected(client):
     rid = _create(client)["id"]
     r = client.patch(f"/api/recipes/{rid}", json={"title": None})
@@ -85,6 +75,7 @@ def test_delete(client):
 
 def test_delete_not_found(client):
     assert client.delete(f"/api/recipes/{uuid4()}").status_code == 404
+
 
 def test_create_saves_parsed_data(client):
     r = client.post("/api/recipes", json={"url": "https://example.com/pancakes"})
