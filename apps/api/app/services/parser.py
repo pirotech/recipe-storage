@@ -1,3 +1,4 @@
+import html
 import logging
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -39,6 +40,33 @@ def _http_url(value) -> str | None:
     return None
 
 
+def get_steps(scraper, url: str) -> list[Step]:
+    steps = []
+    if "pinchofyum.com" in url:
+        raw = scraper.schema.data.get("recipeInstructions") or []
+        for item in raw:
+            if isinstance(item, str):
+                steps.append(html.unescape(item).strip())
+            elif item.get("@type") == "HowToStep":
+                name = html.unescape(item.get("name") or "").strip()
+                text = html.unescape(item.get("text") or "").strip()
+                steps.append(f"{name}: {text}" if name and name != text else text)
+            elif item.get("@type") == "HowToSection":
+                for sub in item.get("itemListElement", []):
+                    name = html.unescape(sub.get("name") or "").strip()
+                    text = html.unescape(sub.get("text") or "").strip()
+                    steps.append(f"{name}: {text}" if name and name != text else text)
+        logger.info("From handle parse: %r", steps)
+    else:
+        steps = _optional(scraper.instructions_list) or []
+        logger.info("From instructions_list(): %r", steps)
+        if not steps:
+            text = _optional(scraper.instructions) or ""
+            steps = text.splitlines()
+            logger.info("From instructions(): %r", steps)
+    return [Step(text=s.strip()) for s in steps if isinstance(s, str) and s.strip()]
+
+
 def parse_recipe(html: str, url: str) -> ParsedRecipe:
     try:
         scraper = scrape_html(html, org_url=url, supported_only=False)
@@ -56,11 +84,7 @@ def parse_recipe(html: str, url: str) -> ParsedRecipe:
     if not title or not ingredients:
         raise ParseError("На странице не найден рецепт")
 
-    steps_text = _optional(scraper.instructions_list) or []
-    if not steps_text:  # запасной путь: один текст → разбиваем по строкам
-        text = _optional(scraper.instructions) or ""
-        steps_text = text.splitlines()
-    steps = [Step(text=s.strip()) for s in steps_text if isinstance(s, str) and s.strip()]
+    steps = get_steps(scraper, url)
 
     servings = _optional(scraper.yields)
     total_time = _optional(scraper.total_time)
