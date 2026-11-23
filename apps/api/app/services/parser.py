@@ -1,3 +1,4 @@
+import html
 import logging
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -39,6 +40,24 @@ def _http_url(value) -> str | None:
     return None
 
 
+def get_steps(scraper) -> list[str]:
+    raw = scraper.schema.data.get("recipeInstructions") or []
+    steps = []
+    for item in raw:
+        if isinstance(item, str):
+            steps.append(html.unescape(item).strip())
+        elif item.get("@type") == "HowToStep":
+            name = html.unescape(item.get("name") or "").strip()
+            text = html.unescape(item.get("text") or "").strip()
+            steps.append(f"{name}: {text}" if name and name != text else text)
+        elif item.get("@type") == "HowToSection":
+            for sub in item.get("itemListElement", []):
+                name = html.unescape(sub.get("name") or "").strip()
+                text = html.unescape(sub.get("text") or "").strip()
+                steps.append(f"{name}: {text}" if name and name != text else text)
+    return steps
+
+
 def parse_recipe(html: str, url: str) -> ParsedRecipe:
     try:
         scraper = scrape_html(html, org_url=url, supported_only=False)
@@ -56,12 +75,8 @@ def parse_recipe(html: str, url: str) -> ParsedRecipe:
     if not title or not ingredients:
         raise ParseError("На странице не найден рецепт")
 
-    steps_text = _optional(scraper.instructions_list) or []
+    steps_text = get_steps(scraper)
     logger.info("Instructions list: %r", steps_text)
-    if not steps_text:  # запасной путь: один текст → разбиваем по строкам
-        text = _optional(scraper.instructions) or ""
-        logger.info("Instructions list not avilable, try to parse text")
-        steps_text = text.splitlines()
     steps = [Step(text=s.strip()) for s in steps_text if isinstance(s, str) and s.strip()]
 
     servings = _optional(scraper.yields)
