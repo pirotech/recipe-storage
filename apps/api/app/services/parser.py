@@ -42,7 +42,7 @@ def _http_url(value) -> str | None:
 
 def get_steps(scraper, url: str) -> list[Step]:
     steps = []
-    if "pinchofyum.com" in url:
+    if "pinchofyum.com" in url or "vkusvill.ru" in url:
         raw = scraper.schema.data.get("recipeInstructions") or []
         for item in raw:
             if isinstance(item, str):
