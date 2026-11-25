@@ -1,35 +1,39 @@
-import { useMemo, type ReactNode } from 'react'
-import { RemoteImage } from '@/shared/ui/remote-image'
-import type { Recipe } from '../api/recipeApi'
-import { formatDate } from '../lib/formatDate'
-import { formatMinutes } from '../lib/formatMinutes'
-import { hostname } from '../lib/hostname'
+import { useMemo, type ReactNode } from "react";
+import { RemoteImage } from "@/shared/ui/remote-image";
+import type { Recipe } from "../api/recipeApi";
+import { formatDate } from "../lib/formatDate";
+import { formatMinutes } from "../lib/formatMinutes";
+import { hostname } from "../lib/hostname";
 import {
   parseIngredient,
   scaleIngredient,
   scaleServings,
-} from '../lib/scaling'
+} from "../lib/scaling";
 
 type Props = {
-  recipe: Recipe
-  /** Во сколько раз изменить количества: ингредиенты и порции. 1 — как в оригинале. */
-  scale?: number
-  /** Выбор количества. Его место здесь, а сам контрол приходит снаружи (слой features). */
-  scaleControl?: ReactNode
-}
+  recipe: Recipe;
+  scale?: number;
+  scaleControl?: ReactNode;
+  renderStepAction?: (index: number) => ReactNode;
+};
 
-export function RecipeDetails({ recipe, scale = 1, scaleControl }: Props) {
+export function RecipeDetails({
+  recipe,
+  scale = 1,
+  scaleControl,
+  renderStepAction,
+}: Props) {
   // Разбор строк зависит только от рецепта, поэтому при смене множителя не повторяется
   const parsedIngredients = useMemo(
     () => recipe.ingredients.map((i) => parseIngredient(i.raw)),
     [recipe.ingredients],
-  )
+  );
 
   const meta = [
     recipe.totalTimeMinutes != null && formatMinutes(recipe.totalTimeMinutes),
     recipe.servings && scaleServings(recipe.servings, scale),
     `Добавлен ${formatDate(recipe.createdAt)}`,
-  ].filter(Boolean)
+  ].filter(Boolean);
 
   return (
     <div className="space-y-8">
@@ -40,7 +44,7 @@ export function RecipeDetails({ recipe, scale = 1, scaleControl }: Props) {
 
       <header className="space-y-2">
         <h1 className="text-2xl font-semibold">{recipe.title}</h1>
-        <p className="text-sm text-muted-foreground">{meta.join(' · ')}</p>
+        <p className="text-sm text-muted-foreground">{meta.join(" · ")}</p>
         <a
           href={recipe.sourceUrl}
           target="_blank"
@@ -70,15 +74,16 @@ export function RecipeDetails({ recipe, scale = 1, scaleControl }: Props) {
         <h2 className="mb-3 text-lg font-semibold">Приготовление</h2>
         {recipe.steps.length > 0 ? (
           <ol className="space-y-5">
-            {recipe.steps.map((step, i) => (
-              <li key={i} className="flex gap-3">
+            {recipe.steps.map((step, index) => (
+              <li key={index} className="flex gap-3">
                 <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-muted text-sm font-medium">
-                  {i + 1}
+                  {index + 1}
                 </span>
-                <div className="space-y-3">
+                <div className="flex-1 space-y-3">
                   <p>{step.text}</p>
                   <RemoteImage src={step.imageUrl} className="rounded-lg" />
                 </div>
+                {renderStepAction?.(index)}
               </li>
             ))}
           </ol>
@@ -87,5 +92,5 @@ export function RecipeDetails({ recipe, scale = 1, scaleControl }: Props) {
         )}
       </section>
     </div>
-  )
+  );
 }

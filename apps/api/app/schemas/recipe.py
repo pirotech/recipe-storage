@@ -3,6 +3,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl, field_validator
 
+NOTES_MAX_LENGTH = 10_000
+
 
 class Ingredient(BaseModel):
     # Единственное поле: количество, единицы и название разбирает фронт
@@ -25,6 +27,7 @@ class RecipeUpdate(BaseModel):
     total_time_minutes: int | None = Field(default=None, ge=0)
     ingredients: list[Ingredient] | None = None
     steps: list[Step] | None = None
+    notes: str | None = Field(default=None, max_length=NOTES_MAX_LENGTH)
 
     @field_validator("title", "ingredients", "steps")
     @classmethod
@@ -44,4 +47,5 @@ class RecipeRead(BaseModel):
     total_time_minutes: int | None = None
     ingredients: list[Ingredient]
     steps: list[Step]
+    notes: str | None = None
     created_at: datetime

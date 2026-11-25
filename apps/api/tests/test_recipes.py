@@ -56,6 +56,39 @@ def test_update(client):
     assert saved["ingredients"][0]["raw"] == "2 свеклы"
 
 
+def test_notes_empty_by_default(client):
+    assert _create(client)["notes"] is None
+
+
+def test_update_notes(client):
+    rid = _create(client)["id"]
+    r = client.patch(f"/api/recipes/{rid}", json={"notes": "Меньше соли"})
+    assert r.status_code == 200
+    assert r.json()["notes"] == "Меньше соли"
+    assert client.get(f"/api/recipes/{rid}").json()["notes"] == "Меньше соли"
+
+
+def test_update_other_fields_keeps_notes(client):
+    rid = _create(client)["id"]
+    client.patch(f"/api/recipes/{rid}", json={"notes": "Любимый рецепт"})
+    r = client.patch(f"/api/recipes/{rid}", json={"title": "Борщ"})
+    assert r.json()["notes"] == "Любимый рецепт"
+
+
+def test_clear_notes(client):
+    rid = _create(client)["id"]
+    client.patch(f"/api/recipes/{rid}", json={"notes": "что-то"})
+    r = client.patch(f"/api/recipes/{rid}", json={"notes": None})
+    assert r.status_code == 200
+    assert r.json()["notes"] is None
+
+
+def test_notes_too_long_rejected(client):
+    rid = _create(client)["id"]
+    r = client.patch(f"/api/recipes/{rid}", json={"notes": "x" * 10_001})
+    assert r.status_code == 422
+
+
 def test_update_title_null_rejected(client):
     rid = _create(client)["id"]
     r = client.patch(f"/api/recipes/{rid}", json={"title": None})
