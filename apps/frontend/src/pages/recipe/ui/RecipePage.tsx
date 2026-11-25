@@ -7,6 +7,7 @@ import {
   type Recipe,
 } from "@/entities/recipe";
 import { DeleteRecipeButton } from "@/features/deleteRecipe";
+import { RecipeNotes } from "@/features/recipeNotes";
 import { ScaleControl } from "@/features/scaleRecipe";
 import { StepSpeakButton, useSpeech } from "@/features/readAloud";
 import { ApiError } from "@/shared/api";
@@ -59,6 +60,7 @@ function RecipeView({ recipe }: { recipe: Recipe }) {
             : undefined
         }
       />
+      <RecipeNotes recipeId={recipe.id} notes={recipe.notes} />
       <div className="border-t pt-6">
         <DeleteRecipeButton
           recipeId={recipe.id}

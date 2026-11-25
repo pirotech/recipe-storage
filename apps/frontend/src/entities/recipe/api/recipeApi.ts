@@ -11,6 +11,7 @@ type RecipeDto = {
   total_time_minutes: number | null;
   ingredients: IngredientDto[];
   steps: StepDto[];
+  notes: string | null;
   created_at: string;
 };
 
@@ -25,6 +26,7 @@ export type Recipe = {
   totalTimeMinutes: number | null;
   ingredients: Ingredient[];
   steps: Step[];
+  notes: string | null;
   createdAt: string;
 };
 
@@ -37,6 +39,7 @@ const toRecipe = (dto: RecipeDto): Recipe => ({
   totalTimeMinutes: dto.total_time_minutes,
   ingredients: dto.ingredients,
   steps: dto.steps.map((s) => ({ text: s.text, imageUrl: s.image_url })),
+  notes: dto.notes,
   createdAt: dto.created_at,
 });
 
@@ -92,6 +95,17 @@ export async function updateRecipe(
       ingredients: update.ingredients,
       steps: update.steps.map((s) => ({ text: s.text, image_url: s.imageUrl })),
     },
+  });
+  return toRecipe(dto);
+}
+
+export async function updateRecipeNotes(
+  id: string,
+  notes: string | null,
+): Promise<Recipe> {
+  const dto = await api<RecipeDto>(`/recipes/${encodeURIComponent(id)}`, {
+    method: "PATCH",
+    body: { notes: notes?.trim() ? notes : null },
   });
   return toRecipe(dto);
 }

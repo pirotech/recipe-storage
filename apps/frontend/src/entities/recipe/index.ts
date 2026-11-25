@@ -1,4 +1,9 @@
-export { createRecipe, deleteRecipe, updateRecipe } from "./api/recipeApi";
+export {
+  createRecipe,
+  deleteRecipe,
+  updateRecipe,
+  updateRecipeNotes,
+} from "./api/recipeApi";
 export type { Recipe, RecipeUpdate, Ingredient, Step } from "./api/recipeApi";
 export { recipeKeys, useRecipes, useRecipe } from "./model/queries";
 export { canScaleRecipe } from "./lib/scaling";
