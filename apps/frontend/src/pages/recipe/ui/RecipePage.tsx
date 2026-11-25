@@ -8,6 +8,7 @@ import {
 } from "@/entities/recipe";
 import { DeleteRecipeButton } from "@/features/deleteRecipe";
 import { ScaleControl } from "@/features/scaleRecipe";
+import { StepSpeakButton, useSpeech } from "@/features/readAloud";
 import { ApiError } from "@/shared/api";
 import { Alert, AlertDescription } from "@/shared/ui/alert";
 import { Skeleton } from "@/shared/ui/skeleton";
@@ -27,6 +28,7 @@ function RecipeView({ recipe }: { recipe: Recipe }) {
   const [scale, setScale] = useState(1);
   // Выбор количества показываем, только если все строки с числами удалось разобрать
   const scalable = useMemo(() => canScaleRecipe(recipe), [recipe]);
+  const speech = useSpeech();
 
   return (
     <article className="mx-auto max-w-3xl space-y-6">
@@ -45,6 +47,16 @@ function RecipeView({ recipe }: { recipe: Recipe }) {
         scale={scalable ? scale : 1}
         scaleControl={
           scalable ? <ScaleControl value={scale} onChange={setScale} /> : null
+        }
+        renderStepAction={
+          speech.supported
+            ? (index) => (
+                <StepSpeakButton
+                  active={speech.activeIndex === index}
+                  onClick={() => speech.toggle(index, recipe.steps[index].text)}
+                />
+              )
+            : undefined
         }
       />
       <div className="border-t pt-6">
