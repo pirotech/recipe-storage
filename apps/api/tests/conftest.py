@@ -69,6 +69,7 @@ def app_db(engine, session_factory):
     app.dependency_overrides.clear()
     with engine.begin() as conn:
         conn.execute(text("TRUNCATE users, login_tokens CASCADE"))
+        conn.execute(text("TRUNCATE users, login_tokens, telegram_logins CASCADE"))
 
 
 @pytest.fixture(autouse=True)
