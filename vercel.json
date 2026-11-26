@@ -9,10 +9,16 @@
       "root": "apps/api/",
       "runtime": "container",
       "entrypoint": "Dockerfile"
+    },
+    "bot": {
+      "root": "apps/bot/",
+      "runtime": "container",
+      "entrypoint": "Dockerfile"
     }
   },
   "rewrites": [
     { "source": "/api/(.*)", "destination": { "service": "api" } },
+    { "source": "/bot/(.*)", "destination": { "service": "bot" } },
     { "source": "/(.*)", "destination": { "service": "frontend" } }
   ]
 }

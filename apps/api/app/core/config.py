@@ -26,6 +26,10 @@ class Settings(BaseSettings):
     refresh_token_days: int = 30
     magic_link_minutes: int = 15
     frontend_url: str = "http://localhost:5173"
+    # Вход через Telegram. Пока username не задан, эндпоинты отвечают 503
+    telegram_bot_username: str | None = None  # без @
+    bot_api_secret: str | None = None  # общий секрет API и бота
+    telegram_login_minutes: int = 5
 
     email_backend: Literal["console", "smtp"] = "console"
     email_from: str = "Recipes <noreply@localhost>"

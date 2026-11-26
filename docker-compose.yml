@@ -31,6 +31,20 @@ services:
       - ./apps/api/app:/app/app
       - ./apps/api/alembic:/app/alembic
 
+  bot:
+    build:
+      context: ./apps/bot
+    env_file: ./apps/bot/.env
+    environment:
+      API_URL: http://api:8000/api
+    depends_on:
+      - api
+    ports:
+      - "8001:8000"
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - ./apps/bot/app:/app/app
+
   frontend:
     build:
       context: ./apps/frontend
